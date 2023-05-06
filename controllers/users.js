@@ -1,10 +1,10 @@
-const User = require('../models/users');
-const { DataError, NotFoundError, ServerError } = require('../errors/errors');
+const User = require('../models/user');
+const { OK, Created, DataError, NotFoundError, ServerError } = require('../errors/errors');
 
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((users) =>
-      res.send({ users }))
+      res.status(OK).send({ users }))
     .catch(() => {
       res.status(ServerError).send({ message: 'Произошла ошибка' });
     });
@@ -15,7 +15,7 @@ module.exports.createUser = (req, res) => {
 
   User.create({ name, about, avatar })
     .then((newUser) =>
-      res.status(201)
+      res.status(Created)
         .send({ newUser }))
     .catch((err) => {
       if (err.name === 'ValidationError') {

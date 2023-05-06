@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
 const { PORT = 3000 } = process.env;
+const bodyParser = require('body-parser');
 const router = require('./routes');
 const app = express();
 
@@ -18,6 +18,7 @@ app.use((req, res, next) => {
 });
 
 app.use(router);
+
 app.use('*', (req, res) => {
   res.status(404).send({ message: 'Такой страницы не существует' });
 });
