@@ -18,7 +18,6 @@ const userSchema = mongoose.Schema({
     minlength: [2, 'Минимальная длина поля "avatar" - 2'],
     required: [true, 'Поле "avatar" должно быть заполнено'],
   },
-  versionKey: false,
-});
+}, { versionKey: false });
 
 module.exports = mongoose.model('user', userSchema);
