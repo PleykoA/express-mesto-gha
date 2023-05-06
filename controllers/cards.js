@@ -30,9 +30,6 @@ module.exports.deleteCard = (req, res) => {
   const { cardId } = req.params;
 
   Card.findByIdAndRemove(cardId)
-    .orFail(() => {
-      throw new Error('Not found');
-    })
     .then((card) => {
       if (!card) {
         res.status(NotFoundError)
@@ -60,9 +57,6 @@ module.exports.likeCard = (req, res) => {
     },
     { new: true },
   )
-    .orFail(() => {
-      throw new Error('Not found');
-    })
     .then((card) => {
       if (!card) {
         res.status(NotFoundError)
@@ -90,9 +84,6 @@ module.exports.removeLikeCard = (req, res) => {
     },
     { new: true },
   )
-    .orFail(() => {
-      throw new Error('Not found');
-    })
     .then((card) => {
       if (!card) {
         res.status(NotFoundError)

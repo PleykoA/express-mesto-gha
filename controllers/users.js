@@ -30,9 +30,6 @@ module.exports.getUserById = (req, res) => {
   const { userId } = req.params;
 
   User.findById(userId)
-    .orFail(() => {
-      throw new Error('Not found');
-    })
     .then((user) => {
       if (!user) {
         res.status(NotFoundError)
@@ -61,9 +58,6 @@ module.exports.updateUser = (req, res) => {
       runValidators: true,
     },
   )
-    .orFail(() => {
-      throw new Error('Not found');
-    })
     .then((user) => {
       if (!user) {
         res.status(NotFoundError)
@@ -94,9 +88,6 @@ module.exports.changeAvatar = (req, res) => {
       runValidators: true,
     },
   )
-    .orFail(() => {
-      throw new Error('Not found');
-    })
     .then((user) => {
       if (!user) {
         res.status(NotFoundError)
