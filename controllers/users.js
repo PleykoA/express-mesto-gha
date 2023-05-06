@@ -1,10 +1,11 @@
 const User = require('../models/user');
-const { OK, Created, DataError, NotFoundError, ServerError } = require('../errors/errors');
+const {
+  OK, Created, DataError, NotFoundError, ServerError,
+} = require('../errors/errors');
 
 module.exports.getUsers = (req, res) => {
   User.find({})
-    .then((users) =>
-      res.status(OK).send({ users }))
+    .then((users) => res.status(OK).send({ users }))
     .catch(() => {
       res.status(ServerError).send({ message: 'Произошла ошибка' });
     });
@@ -14,9 +15,8 @@ module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
 
   User.create({ name, about, avatar })
-    .then((newUser) =>
-      res.status(Created)
-        .send({ newUser }))
+    .then((newUser) => res.status(Created)
+      .send({ newUser }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(DataError).send({ message: 'Произошла ошибка: переданы некорректные данные' });
@@ -30,6 +30,9 @@ module.exports.getUserById = (req, res) => {
   const { userId } = req.params;
 
   User.findById(userId)
+    .orFail(() => {
+      throw new Error('Not found');
+    })
     .then((user) => {
       if (!user) {
         res.status(NotFoundError)
@@ -55,9 +58,12 @@ module.exports.updateUser = (req, res) => {
     { name, about },
     {
       new: true,
-      runValidators: true
-    }
+      runValidators: true,
+    },
   )
+    .orFail(() => {
+      throw new Error('Not found');
+    })
     .then((user) => {
       if (!user) {
         res.status(NotFoundError)
@@ -67,7 +73,7 @@ module.exports.updateUser = (req, res) => {
       }
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
         res.status(DataError).send({
           message: 'Произошла ошибка: переданы некорректные данные',
         });
@@ -85,9 +91,12 @@ module.exports.changeAvatar = (req, res) => {
     { avatar },
     {
       new: true,
-      runValidators: true
-    }
+      runValidators: true,
+    },
   )
+    .orFail(() => {
+      throw new Error('Not found');
+    })
     .then((user) => {
       if (!user) {
         res.status(NotFoundError)
@@ -97,7 +106,7 @@ module.exports.changeAvatar = (req, res) => {
       }
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
         res.status(DataError).send({
           message: 'Произошла ошибка: переданы некорректные данные',
         });

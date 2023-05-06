@@ -1,5 +1,7 @@
 const Card = require('../models/card');
-const { OK, Created, DataError, NotFoundError, ServerError } = require('../errors/errors');
+const {
+  OK, Created, DataError, NotFoundError, ServerError,
+} = require('../errors/errors');
 
 module.exports.getCards = (req, res) => {
   Card.find({})
@@ -11,9 +13,9 @@ module.exports.getCards = (req, res) => {
 
 module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
-  const user = req.user._id;
+  const owner = req.user._id;
 
-  return Card.create({ name, link, user })
+  return Card.create({ name, link, owner })
     .then((card) => res.status(Created).send({ card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -28,6 +30,9 @@ module.exports.deleteCard = (req, res) => {
   const { cardId } = req.params;
 
   Card.findByIdAndRemove(cardId)
+    .orFail(() => {
+      throw new Error('Not found');
+    })
     .then((card) => {
       if (!card) {
         res.status(NotFoundError)
@@ -46,16 +51,18 @@ module.exports.deleteCard = (req, res) => {
 };
 
 module.exports.likeCard = (req, res) => {
-
   Card.findByIdAndUpdate(
     req.params.cardId,
     {
       $addToSet: {
-        likes: req.user._id
-      }
+        likes: req.user._id,
+      },
     },
     { new: true },
   )
+    .orFail(() => {
+      throw new Error('Not found');
+    })
     .then((card) => {
       if (!card) {
         res.status(NotFoundError)
@@ -78,11 +85,14 @@ module.exports.removeLikeCard = (req, res) => {
     req.params.cardId,
     {
       $pull: {
-        likes: req.user._id
-      }
+        likes: req.user._id,
+      },
     },
     { new: true },
   )
+    .orFail(() => {
+      throw new Error('Not found');
+    })
     .then((card) => {
       if (!card) {
         res.status(NotFoundError)
@@ -99,4 +109,3 @@ module.exports.removeLikeCard = (req, res) => {
       }
     });
 };
-

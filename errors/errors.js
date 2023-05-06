@@ -9,5 +9,5 @@ module.exports = {
   Created,
   DataError,
   NotFoundError,
-  ServerError
-}
+  ServerError,
+};
