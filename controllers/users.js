@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/NotFoundError');
 const BadRequestError = require('../errors/BadRequestError');
-const DataError = require('../errors/DataError');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -42,7 +41,7 @@ module.exports.createUser = (req, res, next) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Произошла ошибка: переданы некорректные данные'));
       } else if (err.code === 11000) {
-        const e = new DataError(
+        const e = new BadRequestError(
           'Произошла ошибка',
         );
         e.statusCode = 409;
@@ -63,7 +62,7 @@ module.exports.getUserById = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new DataError('Произошла ошибка'));
+        next(new BadRequestError('Произошла ошибка'));
       } else {
         next(err);
       }
@@ -86,7 +85,7 @@ module.exports.updateUser = (req, res, next) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new DataError('Произошла ошибка'));
+        next(new BadRequestError('Произошла ошибка'));
       } else {
         next(err);
       }
@@ -110,7 +109,7 @@ module.exports.changeAvatar = (req, res, next) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new DataError('Произошла ошибка'));
+        next(new BadRequestError('Произошла ошибка'));
       } else {
         next(err);
       }
