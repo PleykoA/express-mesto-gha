@@ -1,12 +1,12 @@
 const router = require('express').Router();
 const routerCard = require('./cards');
 const routerUser = require('./users');
-const NotFoundError = require('../errors/NotFoundError');
+const ForbiddenError = require('../errors/ForbiddenError');
 
 router.use('/cards', routerCard);
 router.use('/users', routerUser);
 router.use('*', (req, res, next) => {
-  next(new NotFoundError('Произошла ошибка: страница не найдена'));
+  next(new ForbiddenError('Произошла ошибка: страница не найдена'));
 });
 
 module.exports = router;
