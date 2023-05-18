@@ -29,13 +29,13 @@ module.exports.createCard = (req, res, next) => {
 module.exports.deleteCard = (req, res, next) => {
   Card.findByIdAndRemove(req.params.cardId)
     .orFail(() => {
-      throw new NotFoundError('Произошла ошибка: переданы некорректные данные');
+      next(new NotFoundError('Произошла ошибка: переданы некорректные данные'));
     })
     .then((card) => {
       if (card.owner.toString() === req.user._id) {
         res.send(card);
       } else {
-        throw new ForbiddenError('Произошла ошибка');
+        next(new ForbiddenError('Произошла ошибка'));
       }
     })
     .catch(next);
@@ -49,14 +49,14 @@ module.exports.likeCard = (req, res, next) => {
     { new: true },
   )
     .orFail(() => {
-      throw new NotFoundError('Произошла ошибка: переданы некорректные данные');
+      next(new NotFoundError('Произошла ошибка: переданы некорректные данные'));
     })
     .then((likes) => {
       res.send({ data: likes });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new BadRequestError('Произошла ошибка: переданы некорректные данные');
+        next(new BadRequestError('Произошла ошибка: переданы некорректные данные'));
       } else {
         next(err);
       }
@@ -71,14 +71,14 @@ module.exports.removeLikeCard = (req, res, next) => {
     { new: true },
   )
     .orFail(() => {
-      throw new NotFoundError('Произошла ошибка: переданы некорректные данные');
+      next(new NotFoundError('Произошла ошибка: переданы некорректные данные'));
     })
     .then((likes) => {
       res.send({ data: likes });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new BadRequestError('Произошла ошибка: переданы некорректные данные');
+        next(new BadRequestError('Произошла ошибка: переданы некорректные данные'));
       } else {
         next(err);
       }
