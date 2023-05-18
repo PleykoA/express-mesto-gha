@@ -6,6 +6,7 @@ const { celebrate, Joi } = require('celebrate');
 const { createUser, login } = require('./controllers/users');
 const NotFoundError = require('./errors/NotFoundError');
 const HandleErrors = require('./errors/HandleErrors');
+const auth = require('./middlewares/auth');
 
 const { PORT = 3000 } = process.env;
 
@@ -19,7 +20,9 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
+mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
+  useNewUrlParser: true,
+});
 
 app.use(router);
 app.use(errors());
@@ -40,6 +43,7 @@ app.post('/signup', celebrate({
   }),
 }), createUser);
 
+app.use(auth);
 app.use('*', (req, res, next) => {
   next(new NotFoundError('Произошла ошибка: страница не найдена'));
 });

@@ -2,7 +2,6 @@ const { isEmail } = require('validator');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const { RegExp } = require('../app');
 const AuthorizationError = require('../errors/AuthorizationError');
 
 const userSchema = mongoose.Schema({
@@ -26,17 +25,13 @@ const userSchema = mongoose.Schema({
     required: [true, 'Поле "avatar" должно быть заполнено'],
     default:
       'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
-    validate: {
-      validator: (value) => RegExp.test(value),
-      message: 'Некорректный URL',
-    },
   },
   email: {
     type: String,
     required: [true, 'Поле "email" должно быть заполнено'],
     unique: [true, 'Данный email уже используется'],
     validate: {
-      validator: (value) => isEmail(value),
+      validator: (email) => isEmail(email),
       message: 'Некорректный email',
     },
   },
@@ -45,19 +40,23 @@ const userSchema = mongoose.Schema({
     required: [true, 'Поле "password" должно быть заполнено'],
     select: false,
   },
-}, { versionKey: false });
+}, {
+  toObject: {
+    useProjection: true,
+  },
+});
 
 userSchema.statics.findUserByCredentials = function findUserByCredentials(email, password) {
   return this.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return Promise.reject(new AuthorizationError('Произошла ошибка: введены неправильные данные'));
+        return (new AuthorizationError('Произошла ошибка: введены неправильные данные'));
       }
 
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            return Promise.reject(new AuthorizationError('Произошла ошибка: введены неправильные данные'));
+            return (new AuthorizationError('Произошла ошибка: введены неправильные данные'));
           }
           return user;
         });
