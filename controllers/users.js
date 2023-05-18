@@ -1,144 +1,119 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/user');
 const NotFoundError = require('../errors/NotFoundError');
 
-module.exports.getUsers = (req, res) => {
-  User.find({})
-    .then((users) => {
-      res.send({ data: users });
-    })
-    .catch((err) => {
-      res.status(500).send({ message: err.message });
-    });
+const ConflictError = require('../errors/ConflictError');
+const AuthorizationError = require('../errors/AuthorizationError');
+const User = require('../models/user');
+
+const checkUser = (user, res) => {
+  if (!user) {
+    throw new NotFoundError('Нет пользователя с таким id');
+  }
+  return res.send(user);
 };
 
-module.exports.getUserMe = (req, res) => {
-  User.findById(req.params.userId)
-    .orFail(() => {
-      throw new Error('Not found');
+const createUser = (req, res, next) => {
+  bcrypt.hash(req.body.password, 10).then((hash) => {
+    User.create({
+      email: req.body.email,
+      password: hash,
+      name: req.body.name,
+      about: req.body.about,
+      avatar: req.body.avatar,
     })
-    .then((user) => {
-      res.send({ data: user });
-    })
-    .catch((err) => {
-      if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
-        res.status(400).send({ message: err.message });
-      } else if (err.message === 'Not found') {
-        res.status(404).send({ message: 'User not found' });
-      } else {
-        res.status(500).send({ message: err.message });
-      }
-    });
-};
-
-module.exports.createUser = (req, res) => {
-  const {
-    email,
-    password,
-    name,
-    about,
-    avatar,
-  } = req.body;
-
-  bcrypt.hash(password, 10)
-    .then((hash) => {
-      User.create({
-        name,
-        about,
-        avatar,
-        email,
-        password: hash,
+      .then((newUser) => {
+        res.status(201).send({
+          email: newUser.email,
+          name: newUser.name,
+          about: newUser.about,
+          avatar: newUser.avatar,
+        });
+      })
+      .catch((error) => {
+        if (error.code === 11000) {
+          next(
+            new ConflictError(
+              'Пользователь с такой почтой уже зарегистрирован',
+            ),
+          );
+        }
       });
-    })
-    .then((user) => {
-      res.status(201).send({
-        data: user,
-      });
-    })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: err.message });
-      } else if (err.code === 11000) {
-        res.status(409).send({ message: err.message });
-      } else {
-        res.status(500).send({ message: err.message });
-      }
-    });
+  });
 };
 
-module.exports.getUserById = (req, res, next) => {
-  User.findById(req.params.userId)
-    .orFail(() => {
-      next(new NotFoundError('Произошла ошибка: пользователь не найден'));
-    })
-    .then((user) => {
-      res.send({ data: user });
-    })
-    .catch((err) => {
-      if (err.message === 'Not found') {
-        res.status(404).send({ message: 'User not found' });
-      } else {
-        res.status(500).send({ message: err.message });
-      }
-    });
-};
-
-module.exports.updateUser = (req, res) => {
-  const { name, about } = req.body;
-  User.findByIdAndUpdate(
-    req.user._id,
-    { name, about },
-    {
-      new: true,
-      runValidators: true,
-    },
-  )
-    .orFail(() => {
-      throw new Error('Not found');
-    })
-    .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err.message === 'Not found') {
-        res.status(404).send({ message: 'User not found' });
-      } else {
-        res.status(500).send({ message: err.message });
-      }
-    });
-};
-
-module.exports.changeAvatar = (req, res) => {
-  const { avatar } = req.body;
-  User.findByIdAndUpdate(
-    req.user._id,
-    { avatar },
-    {
-      new: true,
-      runValidators: true,
-    },
-  )
-    .orFail(() => {
-      throw new Error('Not found');
-    })
-    .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err.message === 'Not found') {
-        res.status(404).send({ message: 'User not found' });
-      } else {
-        res.status(500).send({ message: err.message });
-      }
-    });
-};
-
-module.exports.login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
-  return User.findUserByCredentials(email, password)
+  User.findOne({ email })
+    .select('+password')
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
-      res.send({ token });
+      if (!user) {
+        throw new AuthorizationError('Неверные почта или пароль');
+      }
+      return bcrypt.compare(password, user.password).then((matched) => {
+        if (!matched) {
+          next(new AuthorizationError('Неверные почта или пароль'));
+        }
+        const token = jwt.sign({ _id: user._id }, 'some-secret-key', {
+          expiresIn: '7d',
+        });
+        return res.send({ token });
+      });
     })
-    .catch((err) => {
-      res.status(401).send({ message: err.message });
+    .catch(next);
+};
+
+const getMe = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => res.send(user))
+    .catch(next);
+};
+
+const getUsers = (req, res, next) => {
+  User.find({})
+    .then((users) => res.send({ data: users }))
+    .catch(next);
+};
+
+const getUserById = (req, res, next) => {
+  const { userId } = req.params;
+
+  User.findById(userId)
+    .then((user) => checkUser(user, res))
+    .catch((error) => {
+      next(error);
     });
+};
+
+const updateUser = (req, res, next) => {
+  const owner = req.user._id;
+  const { name, about } = req.body;
+
+  User.findByIdAndUpdate(
+    owner,
+    { name, about },
+    { new: true, runValidators: true },
+  )
+    .then((user) => checkUser(user, res))
+    .catch(next);
+};
+
+const changeAvatar = (req, res, next) => {
+  const owner = req.user._id;
+  const avatar = req.body;
+
+  User.findByIdAndUpdate(owner, avatar, { new: true, runValidators: true })
+    .then((user) => checkUser(user, res))
+    .catch(next);
+};
+
+module.exports = {
+  login,
+  getUsers,
+  createUser,
+  getUserById,
+  updateUser,
+  changeAvatar,
+  getMe,
 };

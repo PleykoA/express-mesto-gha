@@ -1,8 +1,6 @@
-const validator = require('validator');
+const isEmail = require('validator/lib/isEmail');
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-
-const AuthorizationError = require('../errors/AuthorizationError');
+const { RegExp } = require('../app');
 
 const userSchema = mongoose.Schema({
   name: {
@@ -24,7 +22,7 @@ const userSchema = mongoose.Schema({
     default:
       'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     validate: {
-      validator: (url) => validator.isUrl(url),
+      validator: (url) => RegExp.test(url),
       message: 'Некорректная ссылка',
     },
   },
@@ -33,7 +31,7 @@ const userSchema = mongoose.Schema({
     required: [true, 'Поле "email" должно быть заполнено'],
     unique: [true, 'Данный email уже используется'],
     validate: {
-      validator: (email) => validator.isEmail(email),
+      validator: (email) => isEmail(email),
       message: 'Некорректный email',
     },
   },
@@ -43,22 +41,5 @@ const userSchema = mongoose.Schema({
     select: false,
   },
 }, { versionKey: false });
-
-userSchema.statics.findUserByCredentials = function findUserByCredentials(email, password) {
-  return this.findOne({ email }).select('+password')
-    .then((user) => {
-      if (!user) {
-        return (new AuthorizationError('Произошла ошибка: введены неправильные данные'));
-      }
-
-      return bcrypt.compare(password, user.password)
-        .then((matched) => {
-          if (!matched) {
-            return (new AuthorizationError('Произошла ошибка: введены неправильные данные'));
-          }
-          return user;
-        });
-    });
-};
 
 module.exports = mongoose.model('user', userSchema);

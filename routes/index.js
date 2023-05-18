@@ -1,12 +1,14 @@
 const router = require('express').Router();
+const authRouter = require('express').Router();
+const { celebrate } = require('celebrate');
+const { login, createUser } = require('../controllers/users');
+const { signinValidation, signupValidation } = require('../middlewares/validation');
 const routerCard = require('./cards');
 const routerUser = require('./users');
-const AuthorizationError = require('../errors/AuthorizationError');
 
 router.use('/cards', routerCard);
 router.use('/users', routerUser);
-router.use('*', (req, res, next) => {
-  next(new AuthorizationError('Произошла ошибка: страница не найдена'));
-});
+authRouter.post('/signin', celebrate(signinValidation), login);
+authRouter.post('/signup', celebrate(signupValidation), createUser);
 
-module.exports = router;
+module.exports = { router, authRouter };
