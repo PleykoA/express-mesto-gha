@@ -1,12 +1,11 @@
 const jwt = require('jsonwebtoken');
-const NotFoundError = require('../errors/NotFoundError');
 const ForbiddenError = require('../errors/ForbiddenError');
 
 module.exports = (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    next(new NotFoundError('Необходима авторизация'));
+    next(new ForbiddenError('Необходима авторизация'));
     return;
   }
 
