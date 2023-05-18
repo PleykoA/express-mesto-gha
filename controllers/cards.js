@@ -70,17 +70,17 @@ module.exports.removeLikeCard = (req, res, next) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .orFail(() => {
-      next(new NotFoundError('Произошла ошибка: переданы некорректные данные'));
-    })
-    .then((likes) => {
-      res.send({ data: likes });
+    .then((card) => {
+      if (!card) {
+        next(new NotFoundError('Произошла ошибка: переданы некорректные данные'));
+      } else {
+        res.send({ card });
+      }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Произошла ошибка: переданы некорректные данные'));
-      } else {
-        next(err);
       }
+      next(err);
     });
 };
