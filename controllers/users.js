@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/NotFoundError');
 const BadRequestError = require('../errors/BadRequestError');
+const { ServerError, DataError, ConflictError } = require('../errors/TypeErrors');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -27,7 +28,7 @@ module.exports.getUserMe = (req, res, next) => {
     });
 };
 
-module.exports.createUser = (req, res, next) => {
+module.exports.createUser = (req, res) => {
   const {
     email,
     password,
@@ -53,15 +54,11 @@ module.exports.createUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Произошла ошибка: переданы некорректные данные'));
+        res.status(DataError).send({ message: err.message });
       } else if (err.code === 11000) {
-        const e = new BadRequestError(
-          'Произошла ошибка',
-        );
-        e.statusCode = 409;
-        next(e);
+        res.status(ConflictError).send({ message: err.message });
       } else {
-        next(err);
+        res.status(ServerError).send({ message: err.message });
       }
     });
 };

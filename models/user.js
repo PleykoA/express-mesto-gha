@@ -1,4 +1,4 @@
-const { isEmail } = require('validator');
+const validator = require('validator');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -21,17 +21,19 @@ const userSchema = mongoose.Schema({
   },
   avatar: {
     type: String,
-    minlength: [2, 'Минимальная длина поля "avatar" - 2'],
-    required: [true, 'Поле "avatar" должно быть заполнено'],
     default:
       'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+    validate: {
+      validator: (url) => validator.isUrl(url),
+      message: 'Некорректная ссылка',
+    },
   },
   email: {
     type: String,
     required: [true, 'Поле "email" должно быть заполнено'],
     unique: [true, 'Данный email уже используется'],
     validate: {
-      validator: (email) => isEmail(email),
+      validator: (email) => validator.isEmail(email),
       message: 'Некорректный email',
     },
   },
@@ -40,11 +42,7 @@ const userSchema = mongoose.Schema({
     required: [true, 'Поле "password" должно быть заполнено'],
     select: false,
   },
-}, {
-  toObject: {
-    useProjection: true,
-  },
-});
+}, { versionKey: false });
 
 userSchema.statics.findUserByCredentials = function findUserByCredentials(email, password) {
   return this.findOne({ email }).select('+password')
