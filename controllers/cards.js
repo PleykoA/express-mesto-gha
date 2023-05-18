@@ -27,24 +27,19 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove({ id: req.params.cardId })
+  const { cardId } = req.params;
+  Card.findById(cardId)
     .orFail(() => {
-      next(new NotFoundError('Произошла ошибка: переданы некорректные данные'));
+      next(new NotFoundError('Нет карточки по заданному id'));
     })
     .then((card) => {
-      if (card.owner === req.user.cardId) {
-        res.send({ data: card });
+      if (!card.owner.equals(req.user._id)) {
+        throw new ForbiddenError('Нельзя удалить чужую карточку');
       } else {
-        next(new ForbiddenError('Произошла ошибка'));
+        return Card.deleteOne(card).then(() => res.send({ data: card }));
       }
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new BadRequestError('Произошла ошибка: переданы некорректные данные'));
-      } else {
-        next(err);
-      }
-    });
+    .catch(next);
 };
 
 module.exports.likeCard = (req, res, next) => {
