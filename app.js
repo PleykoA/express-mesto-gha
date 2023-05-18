@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const { errors } = require('celebrate');
 const bodyParser = require('body-parser');
+
 const { celebrate, Joi } = require('celebrate');
 const { createUser, login } = require('./controllers/users');
 const NotFoundError = require('./errors/NotFoundError');
@@ -14,7 +15,7 @@ const router = require('./routes');
 
 const app = express();
 
-const RegExp = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_[\]+.~#?&[\]/=]*)$/;
+const RegExp = (/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_[\]+.~#?&[\]/=]*)$/);
 
 app.use(bodyParser.json());
 app.use(express.json());
@@ -24,6 +25,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,
 });
 
+app.use(auth);
 app.use(router);
 app.use(errors());
 app.use(HandleErrors);
@@ -43,7 +45,6 @@ app.post('/signup', celebrate({
   }),
 }), createUser);
 
-app.use(auth);
 app.use('*', (req, res, next) => {
   next(new NotFoundError('Произошла ошибка: страница не найдена'));
 });
