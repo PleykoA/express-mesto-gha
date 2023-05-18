@@ -6,8 +6,25 @@ const BadRequestError = require('../errors/BadRequestError');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
-    .then((users) => res.send({ users }))
-    .catch(next);
+    .then((users) => {
+      res.send({ data: users });
+    })
+    .catch((err) => {
+      next(err);
+    });
+};
+
+module.exports.getUserMe = (req, res, next) => {
+  User.findById(req.user._id)
+    .orFail(() => {
+      next(new NotFoundError('User not found'));
+    })
+    .then((user) => {
+      res.send({ data: user });
+    })
+    .catch((err) => {
+      next(err);
+    });
 };
 
 module.exports.createUser = (req, res, next) => {
@@ -30,11 +47,8 @@ module.exports.createUser = (req, res, next) => {
       });
     })
     .then((user) => {
-      res.send({
-        name: user.name,
-        about: user.about,
-        avatar: user.avatar,
-        email: user.email,
+      res.status(201).send({
+        data: user,
       });
     })
     .catch((err) => {

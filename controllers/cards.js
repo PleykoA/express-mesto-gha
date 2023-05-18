@@ -5,7 +5,7 @@ const ForbiddenError = require('../errors/ForbiddenError');
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
-    .then((cards) => res.send({ cards }))
+    .then((cards) => res.send({ data: cards }))
     .catch(next);
 };
 
@@ -14,7 +14,7 @@ module.exports.createCard = (req, res, next) => {
   const owner = req.user._id;
 
   return Card.create({ name, link, owner })
-    .then((card) => res.status(201).send({ card }))
+    .then((card) => res.status(201).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(
@@ -27,18 +27,24 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findByIdAndRemove({ id: req.params.cardId })
     .orFail(() => {
       next(new NotFoundError('Произошла ошибка: переданы некорректные данные'));
     })
     .then((card) => {
-      if (card.owner.toString() === req.user._id) {
-        res.send(card);
+      if (card.owner === req.user.cardId) {
+        res.send({ data: card });
       } else {
         next(new ForbiddenError('Произошла ошибка'));
       }
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError('Произошла ошибка: переданы некорректные данные'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.likeCard = (req, res, next) => {
@@ -51,8 +57,8 @@ module.exports.likeCard = (req, res, next) => {
     .orFail(() => {
       next(new NotFoundError('Произошла ошибка: переданы некорректные данные'));
     })
-    .then((likes) => {
-      res.send({ data: likes });
+    .then((card) => {
+      res.send({ data: card });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -70,17 +76,17 @@ module.exports.removeLikeCard = (req, res, next) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
+    .orFail(() => {
+      next(new NotFoundError('Произошла ошибка: переданы некорректные данные'));
+    })
     .then((card) => {
-      if (!card) {
-        next(new NotFoundError('Произошла ошибка: переданы некорректные данные'));
-      } else {
-        res.send({ card });
-      }
+      res.send({ data: card });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Произошла ошибка: переданы некорректные данные'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
