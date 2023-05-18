@@ -43,7 +43,7 @@ app.post('/signup', celebrate({
 
 app.use(auth);
 app.use('*', (req, res, next) => {
-  next(new NotFoundError('Произошла ошибка: страницы не существует'));
+  next(new NotFoundError('Произошла ошибка: страница не найдена'));
 });
 
 app.use((err, req, res, next) => {
@@ -59,4 +59,3 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT);
-
