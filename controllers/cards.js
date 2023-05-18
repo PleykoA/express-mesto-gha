@@ -1,102 +1,86 @@
 const Card = require('../models/card');
-const {
-  OK, Created, DataError, NotFoundError, ServerError,
-} = require('../errors/errors');
+const BadRequestError = require('../errors/BadRequestError');
+const NotFoundError = require('../errors/NotFoundError');
+const ForbiddenError = require('../errors/ForbiddenError');
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send({ cards }))
-    .catch(() => {
-      res.status(ServerError).send({ message: 'Произошла ошибка' });
-    });
+    .catch(next);
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
 
   return Card.create({ name, link, owner })
-    .then((card) => res.status(Created).send({ card }))
+    .then((card) => res.status(201).send({ card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(DataError).send({ message: 'Произошла ошибка: переданы некорректные данные' });
-      } else {
-        res.status(ServerError).send({ message: 'Произошла ошибка' });
+        next(
+          new BadRequestError('Произошла ошибка: переданы некорректные данные'),
+        );
+        return;
       }
+      next(err);
     });
 };
 
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
+  Card.findByIdAndRemove(req.params.cardId)
+    .orFail(() => {
+      throw new NotFoundError('Произошла ошибка: переданы некорректные данные');
+    })
+    .then((card) => {
+      if (card.owner.toString() === req.user._id) {
+        res.send(card);
+      } else {
+        throw new ForbiddenError('Произошла ошибка');
+      }
+    })
+    .catch(next);
+};
+
+module.exports.likeCard = (req, res, next) => {
   const { cardId } = req.params;
-
-  Card.findByIdAndRemove(cardId)
-    .then((card) => {
-      if (!card) {
-        res.status(NotFoundError)
-          .send({ message: 'Произошла ошибка: пользователь не найден' });
-      } else {
-        res.send({ card });
-      }
+  Card.findByIdAndUpdate(
+    cardId,
+    { $addToSet: { likes: req.user._id } },
+    { new: true },
+  )
+    .orFail(() => {
+      throw new NotFoundError('Произошла ошибка: переданы некорректные данные');
+    })
+    .then((likes) => {
+      res.send({ data: likes });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(DataError).send({ message: 'Произошла ошибка: переданы некорректные данные' });
+        throw new BadRequestError('Произошла ошибка: переданы некорректные данные');
       } else {
-        res.status(ServerError).send({ message: 'Произошла ошибка' });
+        next(err);
       }
     });
 };
 
-module.exports.likeCard = (req, res) => {
+module.exports.removeLikeCard = (req, res, next) => {
+  const { cardId } = req.params;
   Card.findByIdAndUpdate(
-    req.params.cardId,
-    {
-      $addToSet: {
-        likes: req.user._id,
-      },
-    },
+    cardId,
+    { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => {
-      if (!card) {
-        res.status(NotFoundError)
-          .send({ message: 'Произошла ошибка: пользователь не найден' });
-      } else {
-        res.status(OK).send({ card });
-      }
+    .orFail(() => {
+      throw new NotFoundError('Произошла ошибка: переданы некорректные данные');
+    })
+    .then((likes) => {
+      res.send({ data: likes });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(DataError).send({ message: 'Произошла ошибка: переданы некорректные данные' });
+        throw new BadRequestError('Произошла ошибка: переданы некорректные данные');
       } else {
-        res.status(ServerError).send({ message: 'Произошла ошибка' });
-      }
-    });
-};
-
-module.exports.removeLikeCard = (req, res) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    {
-      $pull: {
-        likes: req.user._id,
-      },
-    },
-    { new: true },
-  )
-    .then((card) => {
-      if (!card) {
-        res.status(NotFoundError)
-          .send({ message: 'Произошла ошибка: пользователь не найден' });
-      } else {
-        res.status(OK).send({ card });
-      }
-    })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(DataError).send({ message: 'Произошла ошибка: переданы некорректные данные' });
-      } else {
-        res.status(ServerError).send({ message: 'Произошла ошибка' });
+        next(err);
       }
     });
 };
