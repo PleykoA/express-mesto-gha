@@ -30,7 +30,7 @@ module.exports.deleteCard = (req, res, next) => {
   const { cardId } = req.params;
   Card.findById(cardId)
     .orFail(() => {
-      next(new NotFoundError('Нет карточки по заданному id'));
+      next(new ForbiddenError('Нет карточки по заданному id'));
     })
     .then((card) => {
       if (!card.owner.equals(req.user._id)) {
