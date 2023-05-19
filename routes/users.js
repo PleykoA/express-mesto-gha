@@ -1,4 +1,4 @@
-const router = require('express').Router();
+const userRouter = require('express').Router();
 const { celebrate } = require('celebrate');
 const {
   getUserByIdValidation,
@@ -14,11 +14,11 @@ const {
   changeAvatar,
 } = require('../controllers/users');
 
-router.post('/', createUser);
-router.get('/', getUsers);
-router.get('/me', getMe);
-router.get('/:userId', celebrate(getUserByIdValidation), getUserById);
-router.patch('/me', celebrate(editProfileValidation), updateUser);
-router.patch('/me/avatar', celebrate(updateAvatarValidation), changeAvatar);
+userRouter.post('/', createUser);
+userRouter.get('/', getUsers);
+userRouter.get('/me', getMe);
+userRouter.get('/:userId', celebrate(getUserByIdValidation), getUserById);
+userRouter.patch('/me', celebrate(editProfileValidation), updateUser);
+userRouter.patch('/me/avatar', celebrate(updateAvatarValidation), changeAvatar);
 
-module.exports = router;
+module.exports = userRouter;

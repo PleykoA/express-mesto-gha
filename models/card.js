@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const { RegExp } = require('../app');
+
+const RegExp = /^(ftp|http|https):\/\/[^ "]+$/;
 
 const cardSchema = mongoose.Schema({
   name: {

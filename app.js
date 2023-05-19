@@ -3,14 +3,13 @@ const mongoose = require('mongoose');
 const { errors } = require('celebrate');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { authRouter } = require('./routes/index');
 const auth = require('./middlewares/auth');
 
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { PORT = 3000 } = process.env;
 
-const router = require('./routes');
+const router = require('./routes/index');
 
 const app = express();
 
@@ -29,7 +28,6 @@ app.use(limiter);
 
 app.use(requestLogger);
 app.use(auth);
-app.use(authRouter);
 app.use(router);
 app.use(errorLogger);
 app.use(errors());

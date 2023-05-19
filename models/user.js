@@ -1,6 +1,7 @@
 const isEmail = require('validator/lib/isEmail');
 const mongoose = require('mongoose');
-const { RegExp } = require('../app');
+
+const RegExp = /^(ftp|http|https):\/\/[^ "]+$/;
 
 const userSchema = mongoose.Schema({
   name: {

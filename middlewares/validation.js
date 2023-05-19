@@ -1,6 +1,6 @@
 const { Joi } = require('celebrate');
 
-const { RegExp } = require('../app');
+const RegExp = /^(ftp|http|https):\/\/[^ "]+$/;
 
 const signinValidation = {
   body: Joi.object().keys({
@@ -35,7 +35,7 @@ const signupValidation = {
       'string.max': 'Поле "род деятельности" не должно быть больше 30 символов',
       'any.required': 'Поле "род деятельности" не должно быть пустым',
     }),
-    avatar: Joi.string().regex(RegExp).message('Невалидная ссылка'),
+    avatar: Joi.string().pattern(RegExp).message('Невалидная ссылка'),
   }),
 };
 
@@ -62,7 +62,7 @@ const editProfileValidation = {
 
 const updateAvatarValidation = {
   body: Joi.object({
-    avatar: Joi.string().regex(RegExp).message('Невалидная ссылка'),
+    avatar: Joi.string().pattern(RegExp).message('Невалидная ссылка'),
   }),
 };
 
@@ -78,7 +78,7 @@ const createCardValidation = {
       })
       .required(),
     link: Joi.string()
-      .regex(RegExp)
+      .pattern(RegExp)
       .messages({
         'string.dataUri': 'Невалидная ссылка',
         'any.required': 'Название карточки не должно быть пустым',
