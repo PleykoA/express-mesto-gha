@@ -44,9 +44,15 @@ const createCardValidation = celebrate({
   }),
 });
 
-const cardValidation = celebrate({
-  params: Joi.object().keys({
-    userId: Joi.string().hex().length(24).required(),
+const deleteCardValidation = celebrate({
+  params: Joi.object({
+    cardId: Joi.string().hex().length(24),
+  }),
+});
+
+const likeCardValidation = celebrate({
+  params: Joi.object({
+    cardId: Joi.string().hex().length(24),
   }),
 });
 
@@ -57,5 +63,6 @@ module.exports = {
   signinValidation,
   signupValidation,
   createCardValidation,
-  cardValidation,
+  deleteCardValidation,
+  likeCardValidation,
 };
