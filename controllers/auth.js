@@ -4,7 +4,7 @@ const userSchema = require('../models/user');
 const BadRequest = require('../errors/BadRequestError'); // 400
 const ConflictError = require('../errors/ConflictError'); // 409
 
-const createUsers = (req, res, next) => {
+const createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -48,6 +48,6 @@ const login = (req, res, next) => {
 };
 
 module.exports = {
-  createUsers,
+  createUser,
   login,
 };
