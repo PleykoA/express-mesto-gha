@@ -4,7 +4,9 @@ const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 const NotFoundError = require('./errors/NotFoundError');
+const authRouter = require('./routes/auth');
 const router = require('./routes');
+const auth = require('./middlewares/auth');
 const cors = require('./middlewares/cors');
 
 const { PORT = 3000 } = process.env;
@@ -17,6 +19,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(requestLogger);
 app.use(cors);
+app.use(authRouter);
+app.use(auth);
 app.use(router);
 app.use(errorLogger);
 app.use(errors());
