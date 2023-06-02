@@ -25,66 +25,41 @@ const createCard = (req, res, next) => {
     });
 };
 const deleteCard = (req, res, next) => {
-  Card.findOneAndDelete({ _id: req.params.cardId })
+  const { cardId } = req.params;
+  Card.findById(cardId)
     .orFail(() => {
-      next(new NotFoundError('Card not found'));
+      throw new NotFoundError('Нет карточки по заданному id');
     })
     .then((card) => {
-      if (card.owner === req.params.cardId) {
-        res.send({ data: card });
+      if (!card.owner.equals(req.user._id)) {
+        throw new ForbiddenError('Нельзя удалить чужую карточку');
       } else {
-        const err = new Error('Forbidden');
-        err.statusCode = ForbiddenError;
-        next(err);
+        return Card.deleteOne(card).then(() => res.send({ data: card }));
       }
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new BadRequestError());
-      } else {
-        next(err);
-      }
-    });
+    .catch(next);
 };
+const handleLike = (req, res, data, next) => {
+  const { cardId } = req.params;
+  Card.findByIdAndUpdate(cardId, data, { new: true })
+    .orFail(() => {
+      throw new NotFoundError('Нет карточки по заданному id');
+    })
+    .populate(['owner', 'likes'])
+    .then((likes) => {
+      res.send({ data: likes });
+    })
+    .catch(next);
+};
+
 const likeCard = (req, res, next) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $addToSet: { likes: req.user._id } },
-    { new: true },
-  )
-    .orFail(() => {
-      next(new NotFoundError('Card not found'));
-    })
-    .then((card) => {
-      res.send({ data: card });
-    })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new BadRequestError());
-      } else {
-        next(err);
-      }
-    });
+  const data = { $addToSet: { likes: req.user._id } };
+  handleLike(req, res, data, next);
 };
+
 const removeLikeCard = (req, res, next) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $pull: { likes: req.user._id } },
-    { new: true },
-  )
-    .orFail(() => {
-      next(new NotFoundError('Card not found'));
-    })
-    .then((card) => {
-      res.send({ data: card });
-    })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new BadRequestError());
-      } else {
-        next(err);
-      }
-    });
+  const data = { $pull: { likes: req.user._id } };
+  handleLike(req, res, data, next);
 };
 
 module.exports = {
