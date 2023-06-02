@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
 const cors = require('./middlewares/cors');
 
+const NotFoundError = require('./errors/NotFoundError');
+
 const authRouter = require('./routes/auth');
 const router = require('./routes');
 const auth = require('./middlewares/auth');
@@ -26,7 +28,7 @@ app.use(errorLogger);
 app.use(errors());
 
 app.use('*', (req, res) => {
-  res.status(404).send({ message: 'Такой страницы не существует' });
+  res.status(new NotFoundError('Такой страницы не существует'));
 });
 
 app.use((err, req, res, next) => {
