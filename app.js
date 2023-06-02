@@ -2,49 +2,50 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
-const cors = require('./middlewares/cors');
-const { requestLogger, errorLogger } = require('./middlewares/logger');
-const NotFoundError = require('./errors/NotFoundError');
-const authRouter = require('./routes/auth');
+const { errorLogger } = require('./middlewares/logger');
 const router = require('./routes');
+const NotFoundError = require('./errors/NotFoundError');
+
 const auth = require('./middlewares/auth');
 
-const { PORT = 3000 } = process.env;
 const app = express();
-
-mongoose.connect('mongodb://localhost:27017/mestodb', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => {
-  console.log('Connected to database');
-}).catch((error) => {
-  console.error('Error connecting to database:', error);
-});
-
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(cors);
+const { validationCreateUser, validationLogin } = require('./middlewares/validation');
 
-app.use(authRouter);
+const { PORT = 3000 } = process.env;
+const { createUsers, login } = require('./controllers/auth');
+
+app.post('/signin', validationLogin, login);
+app.post('/signup', validationCreateUser, createUsers);
 app.use(auth);
 app.use(router);
+
+async function connect() {
+  try {
+    await mongoose.set('strictQuery', false);
+    await mongoose.connect('mongodb://localhost:27017/mestodb');
+    await app.listen(PORT);
+    console.log(`App listening on port ${PORT}`);
+  } catch (err) {
+    console.log(err);
+  }
+}
 app.use(errorLogger);
 app.use(errors());
-app.use(requestLogger);
 
 app.use('*', (req, res) => {
   res.status(new NotFoundError('Такой страницы не существует'));
 });
-
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
-
   res.status(statusCode).send({
-    message: statusCode === 500 ? 'На сервере произошла ошибка' : message,
+    message: statusCode === 500
+      ? 'На сервере произошла ошибка'
+      : message,
   });
-
   next();
 });
 
-app.listen(PORT);
+connect()
+  .then(() => console.log('MongoDB connected'));

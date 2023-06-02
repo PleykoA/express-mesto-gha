@@ -6,8 +6,8 @@ const {
   likeCardValidation,
 } = require('../utils/validation');
 const {
-  createCard,
   getCards,
+  createCard,
   deleteCard,
   likeCard,
   removeLikeCard,
