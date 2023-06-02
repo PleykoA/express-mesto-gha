@@ -5,24 +5,23 @@ const ForbiddenError = require('../errors/ForbiddenError');
 
 const getCards = (req, res, next) => {
   Card.find({})
-    .then((cards) => {
-      res.send({ data: cards });
-    })
-    .catch((err) => {
-      next(err);
-    });
+    .then((cards) => res.send({ cards }))
+    .catch(next);
 };
+
 const createCard = (req, res, next) => {
   const { name, link } = req.body;
-
-  Card.create({ name, link, owner: req.user._id })
-    .then((card) => res.status(201).send({ data: card }))
+  const owner = req.user._id;
+  return Card.create({ name, link, owner })
+    .then((card) => res.status(201).send({ card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError());
-      } else {
-        next(err);
+        next(
+          new BadRequestError('Переданы некорректные данные при создании карточки.'),
+        );
+        return;
       }
+      next(err);
     });
 };
 const deleteCard = (req, res, next) => {
