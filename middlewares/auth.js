@@ -1,7 +1,5 @@
 const jwt = require('jsonwebtoken');
 const AuthorizationError = require('../errors/AuthorizationError');
-const NotFoundError = require('../errors/NotFoundError');
-const ForbiddenError = require('../errors/ForbiddenError');
 
 module.exports = (req, res, next) => {
   const { authorization } = req.headers;
@@ -22,22 +20,4 @@ module.exports = (req, res, next) => {
   req.user = payload;
 
   return next();
-};
-
-const Card = require('../models/card');
-
-module.exports = (req, res, next) => {
-  Card.findById({ _id: req.params.cardId })
-    .then((card) => {
-      if (!card) {
-        next(new NotFoundError('Карточки с указанным id не существует'));
-      }
-      if (card.owner.toHexString() !== req.user._id) {
-        next(
-          new ForbiddenError('У вас нет прав на удаление чужой карточки'),
-        );
-      }
-      return next();
-    })
-    .catch(next);
 };

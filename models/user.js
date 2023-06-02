@@ -1,7 +1,7 @@
 const isEmail = require('validator/lib/isEmail');
 const mongoose = require('mongoose');
 
-const RegExp = /^(ftp|http|https):\/\/[^ "]+$/;
+const { RegExp } = require('../utils/utils');
 
 const userSchema = mongoose.Schema({
   name: {
@@ -41,6 +41,6 @@ const userSchema = mongoose.Schema({
     required: [true, 'Поле "password" должно быть заполнено'],
     select: false,
   },
-}, { versionKey: false });
+});
 
 module.exports = mongoose.model('user', userSchema);

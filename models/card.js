@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
-
-const RegExp = /^(ftp|http|https):\/\/[^ "]+$/;
+const { RegExp } = require('../utils/utils');
 
 const cardSchema = mongoose.Schema({
   name: {
@@ -23,7 +22,7 @@ const cardSchema = mongoose.Schema({
     required: true,
   },
   likes: {
-    type: [mongoose.Schema.Types.ObjectId],
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'user',
     default: [],
   },
@@ -31,6 +30,6 @@ const cardSchema = mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-}, { versionKey: false });
+});
 
 module.exports = mongoose.model('card', cardSchema);
