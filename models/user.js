@@ -6,16 +6,16 @@ const { RegExp } = require('../utils/utils');
 const userSchema = mongoose.Schema({
   name: {
     type: String,
-    minlength: [2, 'Минимальная длина поля "name" - 2'],
-    maxlength: [30, 'Максимальная длина поля "name" - 30'],
-    required: [true, 'Поле "name" должно быть заполнено'],
+    minlength: 2,
+    maxlength: 30,
+    required: true,
     default: 'Жак-Ив Кусто',
   },
   about: {
     type: String,
-    minlength: [2, 'Минимальная длина поля "about" - 2'],
-    maxlength: [30, 'Максимальная длина поля "about" - 30'],
-    required: [true, 'Поле "about" должно быть заполнено'],
+    minlength: 2,
+    maxlength: 30,
+    required: true,
     default: 'Исследователь',
   },
   avatar: {
@@ -29,8 +29,8 @@ const userSchema = mongoose.Schema({
   },
   email: {
     type: String,
-    required: [true, 'Поле "email" должно быть заполнено'],
-    unique: [true, 'Данный email уже используется'],
+    required: true,
+    unique: true,
     validate: {
       validator: (email) => isEmail(email),
       message: 'Некорректный email',
@@ -38,7 +38,7 @@ const userSchema = mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Поле "password" должно быть заполнено'],
+    required: true,
     select: false,
   },
 });

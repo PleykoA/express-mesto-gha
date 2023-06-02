@@ -4,13 +4,13 @@ const { RegExp } = require('../utils/utils');
 const cardSchema = mongoose.Schema({
   name: {
     type: String,
-    minlength: [2, 'Минимальная длина поля "name" - 2'],
-    maxlength: [30, 'Максимальная длина поля "name" - 30'],
-    required: [true, 'Поле "name" должно быть заполнено'],
+    minlength: 2,
+    maxlength: 30,
+    required: true,
   },
   link: {
     type: String,
-    required: [true, 'Поле "link" должно быть заполнено'],
+    required: true,
     validate: {
       validator: (value) => RegExp.test(value),
       message: 'Некорректный URL',
