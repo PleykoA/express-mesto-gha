@@ -1,44 +1,44 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { errors } = require('celebrate');
 const bodyParser = require('body-parser');
-const rateLimit = require('express-rate-limit');
-const auth = require('./middlewares/auth');
+const { errors } = require('celebrate');
+const cors = require('./middlewares/cors');
 
+const authRouter = require('./routes/auth');
+const router = require('./routes');
+const auth = require('./middlewares/auth');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { PORT = 3000 } = process.env;
-
-const router = require('./routes/index');
-
 const app = express();
 
+mongoose.connect('mongodb://localhost:27017/mestodb');
+
 app.use(bodyParser.json());
-app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
-  useNewUrlParser: true,
+app.use((req, res, next) => {
+  req.user = {
+    _id: '64563c499411ced9b6c6f292',
+  };
+
+  next();
 });
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-});
-app.use(limiter);
 
 app.use(requestLogger);
+app.use(cors);
+app.use(authRouter);
 app.use(auth);
 app.use(router);
 app.use(errorLogger);
 app.use(errors());
 
-app.use((req, res) => {
-  res.status(404).send({
-    message: 'Запрошен несуществующий роут',
-  });
+app.use('*', (req, res) => {
+  res.status(404).send({ message: 'Такой страницы не существует' });
 });
 
 app.use((err, req, res, next) => {
+  console.log(err);
   const { statusCode = 500, message } = err;
 
   res.status(statusCode).send({
@@ -48,4 +48,6 @@ app.use((err, req, res, next) => {
   next();
 });
 
-app.listen(PORT);
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
+});

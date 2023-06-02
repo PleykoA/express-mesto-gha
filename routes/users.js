@@ -4,7 +4,7 @@ const {
   getUserByIdValidation,
   editProfileValidation,
   updateAvatarValidation,
-} = require('../middlewares/validation');
+} = require('../utils/validation');
 const {
   createUser,
   getUsers,

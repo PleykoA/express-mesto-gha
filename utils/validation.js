@@ -1,6 +1,5 @@
 const { Joi } = require('celebrate');
-
-const RegExp = /^(ftp|http|https):\/\/[^ "]+$/;
+const { RegExp } = require('./utils');
 
 const signinValidation = {
   body: Joi.object().keys({

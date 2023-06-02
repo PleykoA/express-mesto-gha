@@ -6,7 +6,7 @@ const {
   createCardValidation,
   deleteCardValidation,
   likeCardValidation,
-} = require('../middlewares/validation');
+} = require('../utils/validation');
 const {
   createCard,
   getCards,
