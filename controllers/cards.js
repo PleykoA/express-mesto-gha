@@ -7,49 +7,39 @@ const getCards = (req, res, next) => {
   Card.find({})
     .populate(['owner', 'likes'])
     .then((cards) => {
-      res.send(cards);
+      res.send({ data: cards });
     })
     .catch(next);
 };
 
 const createCard = (req, res, next) => {
-  const data = new Date();
-  const owner = req.user._id;
   const { name, link } = req.body;
 
-  Card.create({ name, link, owner })
+  Card.create({ name, link, owner: req.user._id })
+    .then((card) => card.populate('owner'))
     .then((card) => {
-      res.status(201).send({
-        name: card.name,
-        link: card.link,
-        owner: card.owner,
-        _id: card._id,
-        createdAt: data,
-      });
+      res.send({ data: card });
     })
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
-        next(
-          new BadRequestError(
-            'Переданы некорректные данные при создании карточки',
-          ),
-        );
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        throw new BadRequestError('Переданы некорректные данные при создании карточки');
+      } else {
+        next(err);
       }
-      next(error);
     });
 };
 
 const deleteCard = (req, res, next) => {
   const { cardId } = req.params;
-  Card.findById(cardId)
+  Card.findByIdAndRemove(cardId)
     .orFail(() => {
       throw new NotFoundError('Нет карточки по заданному id');
     })
     .then((card) => {
-      if (!card.owner.equals(req.user._id)) {
-        throw new ForbiddenError('Нельзя удалить чужую карточку');
+      if (card.owner.toString() === req.user._id) {
+        res.send(card);
       } else {
-        return Card.deleteOne(card).then(() => res.send({ data: card }));
+        throw new ForbiddenError('Нельзя удалить чужую карточку');
       }
     })
     .catch(next);

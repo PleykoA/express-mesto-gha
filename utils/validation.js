@@ -1,14 +1,14 @@
-const { Joi } = require('celebrate');
+const { celebrate, Joi } = require('celebrate');
 const { RegExp } = require('./utils');
 
-const signinValidation = {
+const signinValidation = celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email(),
     password: Joi.string().required().min(8),
   }),
-};
+});
 
-const signupValidation = {
+const signupValidation = celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email(),
     password: Joi.string().required().min(8),
@@ -16,45 +16,39 @@ const signupValidation = {
     about: Joi.string().min(2).max(30),
     avatar: Joi.string().pattern(RegExp),
   }),
-};
+});
 
-const getUserByIdValidation = {
+const getUserByIdValidation = celebrate({
   params: Joi.object({
     userId: Joi.string().hex().length(24),
   }),
-};
+});
 
-const editProfileValidation = {
+const editProfileValidation = celebrate({
   body: Joi.object({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
   }),
-};
+});
 
-const updateAvatarValidation = {
+const updateAvatarValidation = celebrate({
   body: Joi.object({
     avatar: Joi.string().pattern(RegExp),
   }),
-};
+});
 
-const createCardValidation = {
+const createCardValidation = celebrate({
   body: Joi.object({
     name: Joi.string().min(2).max(30).required(),
     link: Joi.string().pattern(RegExp).required(),
   }),
-};
+});
 
-const deleteCardValidation = {
-  params: Joi.object({
-    cardId: Joi.string().hex().length(24),
+const cardValidation = celebrate({
+  params: Joi.object().keys({
+    userId: Joi.string().hex().length(24).required(),
   }),
-};
-
-const likeCardValidation = {
-  params: Joi.object({
-    cardId: Joi.string().hex().length(24),
-  }),
-};
+});
 
 module.exports = {
   getUserByIdValidation,
@@ -63,6 +57,5 @@ module.exports = {
   signinValidation,
   signupValidation,
   createCardValidation,
-  deleteCardValidation,
-  likeCardValidation,
+  cardValidation,
 };
