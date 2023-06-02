@@ -22,4 +22,4 @@ const handleErrors = (error, res) => {
   return res.status(500).send({ message: 'На сервере произошла ошибка' });
 };
 
-module.exports = handleErrors;
+module.exports = { handleErrors };
