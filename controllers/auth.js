@@ -1,15 +1,24 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const userSchema = require('../models/user');
+const User = require('../models/user');
 const BadRequest = require('../errors/BadRequestError'); // 400
-const ConflictError = require('../errors/ConflictError'); // 409
+const ConflictError = require('../errors/ConflictError');
+const AuthorizationError = require('../errors/AuthorizationError');
+const NotFoundError = require('../errors/NotFoundError');
+
+const checkUser = (user, res) => {
+  if (!user) {
+    throw new NotFoundError('Нет пользователя с таким id');
+  }
+  return res.send(user);
+};
 
 const createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
   bcrypt.hash(password, 10).then((hash) => {
-    userSchema
+    User
       .create({
         name, about, avatar, email, password: hash,
       })
@@ -36,13 +45,22 @@ const createUser = (req, res, next) => {
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
-  return userSchema
-    .findUserByCredentials(email, password)
+
+  User.findOne({ email })
+    .select('+password')
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'some-secret-key', {
-        expiresIn: '7d',
+      checkUser(user, res);
+      console.log(user);
+      return bcrypt.compare(password, user.password).then((matched) => {
+        if (!matched) {
+          next(new AuthorizationError('Неверные почта или пароль'));
+        }
+        const token = jwt.sign({ _id: user._id }, 'some-secret-key', {
+          expiresIn: '7d',
+        });
+        console.log(token);
+        return res.send({ token });
       });
-      res.send({ token });
     })
     .catch(next);
 };

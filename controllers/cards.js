@@ -16,7 +16,9 @@ const createCard = (req, res) => {
   Card
     .create({ name, link, owner })
     .then((card) => res.status(201).send(card))
-    .catch((err) => handleErrors(err, res));
+    .catch((err) => {
+      handleErrors(err, res);
+    });
 };
 
 const deleteCard = (req, res, next) => {

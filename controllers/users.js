@@ -1,7 +1,4 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const NotFoundError = require('../errors/NotFoundError');
-const AuthorizationError = require('../errors/AuthorizationError');
 const User = require('../models/user');
 const BadRequestError = require('../errors/BadRequestError');
 
@@ -10,26 +7,6 @@ const checkUser = (user, res) => {
     throw new NotFoundError('Нет пользователя с таким id');
   }
   return res.send(user);
-};
-
-const login = (req, res, next) => {
-  const { email, password } = req.body;
-
-  User.findOne({ email })
-    .select('+password')
-    .then((user) => {
-      checkUser(user, res);
-      return bcrypt.compare(password, user.password).then((matched) => {
-        if (!matched) {
-          next(new AuthorizationError('Неверные почта или пароль'));
-        }
-        const token = jwt.sign({ _id: user._id }, 'some-secret-key', {
-          expiresIn: '7d',
-        });
-        return res.send({ token });
-      });
-    })
-    .catch(next);
 };
 
 const getMe = (req, res, next) => {
@@ -113,7 +90,6 @@ const getCurrentUser = (req, res, next) => {
 };
 
 module.exports = {
-  login,
   getUsers,
   getUserById,
   updateUser,
