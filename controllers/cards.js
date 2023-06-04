@@ -23,17 +23,29 @@ const createCard = (req, res) => {
 
 const deleteCard = (req, res, next) => {
   const { cardId } = req.params;
-  return Card.findById(cardId)
-    .then((card) => {
-      if (!card) {
-        throw new NotFoundError('Пользователь не найден');
-      }
-      if (!card.owner.equals(req.user._id)) {
-        return next(new ForbiddenError('Вы не можете удалить чужую карточку'));
-      }
-      return card.remove().then(() => res.send({ message: 'Карточка успешно удалена' }));
+
+  Card.findById(cardId)
+    .orFail(() => {
+      throw new NotFoundError(`Карточка с id: ${cardId} не найдена`);
     })
-    .catch(next);
+    .then((card) => {
+      if (card.owner.toString() === req.user._id) {
+        Card.findByIdAndRemove(cardId).then(() => res.send(card));
+      } else {
+        throw new ForbiddenError('Нельзя удалять чужие карточки');
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError(
+          `Передан некорректны id: ${cardId} в методы удаления карточки`,
+        ));
+      } else if (err.name === 'NotFoundError') {
+        next(new NotFoundError(`Карточка с id: ${cardId} не найдена`));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const likeCard = (req, res, next) => {

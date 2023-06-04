@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const ForbiddenError = require('../errors/ForbiddenError');
 const NotFoundError = require('../errors/NotFoundError');
 const AuthorizationError = require('../errors/AuthorizationError');
-// const BadRequestError = require('../errors/BadRequestError');
 
 const { CastError, ValidationError } = mongoose.Error;
 

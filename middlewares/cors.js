@@ -1,4 +1,4 @@
-const { allowedCors } = require('../utils/utils');
+const { cors } = require('../utils/utils');
 
 module.exports = (req, res, next) => {
   const { origin } = req.headers;
@@ -6,7 +6,7 @@ module.exports = (req, res, next) => {
   const requestHeaders = req.headers['access-control-request-headers'];
   const DEFAULT_METHOD = 'GET,HEAD,PUT,PATCH,POST,DELETE';
 
-  if (allowedCors.includes(origin)) {
+  if (cors.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
   }
   if (method === 'OPTIONS') {
