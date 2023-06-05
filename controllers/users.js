@@ -9,7 +9,7 @@ const { NODE_ENV, JWT_SECRET = 'dev-secret' } = process.env;
 
 const checkUser = (user, res) => {
   if (!user) {
-    throw new NotFoundError('Нет пользователя с таким id');
+    throw new NotFoundError('Ошибка: пользователь не найден');
   }
   return res.send(user);
 };
@@ -40,11 +40,11 @@ const createUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError(
-          'Переданы некорректные данные',
+          'Ошибка: переданы некорректные данные',
         ));
       } else if (err.code === 11000) {
         next(new ConflictError(
-          'Пользователь с таким email уже существует',
+          'Ошибка: пользователь с таким email уже существует',
         ));
       } else {
         next(err);
@@ -73,7 +73,7 @@ const getUserById = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequestError('Передан некорретный Id'));
+        next(new BadRequestError('Ошибка: переданы некорректные данные'));
         return;
       }
       next(err);
@@ -94,7 +94,7 @@ const updateUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
-        next(BadRequestError('Переданы некорректные данные при обновлении профиля'));
+        next(BadRequestError('Ошибка: переданы некорректные данные'));
       } else next(err);
     });
 };
@@ -110,7 +110,7 @@ const changeAvatar = (req, res, next) => {
     .then((user) => res.status(200).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
-        next(new BadRequestError('Переданы некорректные данные при обновлении профиля'));
+        next(new BadRequestError('Ошибка: переданы некорректные данные'));
       } else next(err);
     });
 };
@@ -119,15 +119,15 @@ const getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
       if (!user) {
-        throw new NotFoundError('Пользователь не найден');
+        throw new NotFoundError('Ошибка: пользователь не найден');
       }
       res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(BadRequestError('Переданы некорректные данные'));
+        next(BadRequestError('Ошибка: переданы некорректные данные'));
       } else if (err.message === 'NotFound') {
-        next(new NotFoundError('Пользователь не найден'));
+        next(new NotFoundError('Ошибка: пользователь не найден'));
       } else next(err);
     });
 };

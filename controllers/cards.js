@@ -17,7 +17,7 @@ const createCard = (req, res, next) => {
     .then((card) => res.status(201).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError());
+        next(new BadRequestError('Ошибка'));
       } else {
         next(err);
       }
@@ -29,22 +29,20 @@ const deleteCard = (req, res, next) => {
 
   Card.findById(cardId)
     .orFail(() => {
-      throw new NotFoundError(`Карточка с id: ${cardId} не найдена`);
+      throw new NotFoundError('Ошибка: карточка не найдена');
     })
     .then((card) => {
       if (card.owner.toString() === req.user._id) {
         Card.findByIdAndRemove(cardId).then(() => res.send(card));
       } else {
-        throw new ForbiddenError('Нельзя удалять чужие карточки');
+        throw new ForbiddenError('Ошибка: нельзя удалять чужие карточки');
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequestError(
-          `Передан некорректны id: ${cardId} в методы удаления карточки`,
-        ));
+        next(new BadRequestError('Ошибка'));
       } else if (err.name === 'NotFoundError') {
-        next(new NotFoundError(`Карточка с id: ${cardId} не найдена`));
+        next(new NotFoundError('Ошибка: карточка не найдена'));
       } else {
         next(err);
       }
@@ -59,13 +57,13 @@ const likeCard = (req, res, next) => {
   )
     .then((card) => {
       if (!card) {
-        throw new NotFoundError('Пользователь не найден');
+        throw new NotFoundError('Ошибка: пользователь не найден');
       }
       res.send({ data: card });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return next(new BadRequestError('Переданы некорректные данные для постановки лайка'));
+        return next(new BadRequestError('Ошибка: некорректные данные для постановки лайка'));
       }
       return next(err);
     });
@@ -79,13 +77,13 @@ const removeLikeCard = (req, res, next) => {
   )
     .then((card) => {
       if (!card) {
-        throw new NotFoundError('Пользователь не найден');
+        throw new NotFoundError('Ошибка: пользователь не найден');
       }
       res.send({ data: card });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return next(new BadRequestError('Переданы некорректные данные для постановки лайка'));
+        return next(new BadRequestError('Ошибка: некорректные данные для постановки лайка'));
       }
       return next(err);
     });

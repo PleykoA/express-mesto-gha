@@ -7,14 +7,14 @@ const validationUrl = (url) => {
   if (validate) {
     return url;
   }
-  throw new BadRequest('Некорректный URL');
+  throw new BadRequest('Ошибка: некорректный URL');
 };
 
 const validationID = (id) => {
   if (/^[0-9a-fA-F]{24}$/.test(id)) {
     return id;
   }
-  throw new BadRequest('Некорректный id');
+  throw new BadRequest('Ошибка: переданы некорректные данные');
 };
 
 const validationLogin = celebrate({
