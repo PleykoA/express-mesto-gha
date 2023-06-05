@@ -7,7 +7,7 @@ router.use('/users', usersRouter);
 router.use('/cards', cardsRouter);
 
 router.use(() => {
-  throw new NotFoundError('Такая страница не существует');
+  throw new NotFoundError('Страница не существует');
 });
 
 module.exports = router;

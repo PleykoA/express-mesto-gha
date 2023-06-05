@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 const { validationCreateUser, validationLogin } = require('./middlewares/validation');
 
 const { PORT = 3000 } = process.env;
-const { createUser, login, logout } = require('./controllers/auth');
+const { createUser, login, logout } = require('./controllers/users');
 
 app.get('/signout', logout);
 app.post('/signin', validationLogin, login);
