@@ -11,6 +11,7 @@ const validationUrl = (url) => {
 };
 
 const validationID = (id) => {
+  Joi.string().length(24).hex().required();
   if (/^[0-9a-fA-F]{24}$/.test(id)) {
     return id;
   }
